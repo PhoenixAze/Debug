@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gradient | System Debug</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="debug.css">
+</head>
+<body>
+
+  <header class="debug-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="logo-box">G</div>
+        Gradient <span>Debug Console</span>
+      </div>
+      <div class="header-actions">
+        <label class="auto-refresh-toggle">
+          <input type="checkbox" id="toggle-autorefresh">
+          <span class="toggle-label">Avto-Yenilə (30s)</span>
+        </label>
+        <button id="btn-refresh" class="btn-refresh">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          Yenilə
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="debug-main">
+    
+    <!-- STATUS BÖLMƏSİ -->
+    <section class="debug-section">
+      <h2 class="section-title">Sistem Vəziyyəti</h2>
+      <div class="grid-2">
+        <div class="status-card" id="card-backend">
+          <div class="status-header">
+            <span class="status-title">FastAPI Backend</span>
+            <div class="status-badge" id="badge-backend">
+              <span class="status-dot" id="dot-backend"></span>
+              <span id="val-backend">Yoxlanılır...</span>
+            </div>
+          </div>
+          <div class="status-error" id="err-backend"></div>
+        </div>
+        
+        <div class="status-card" id="card-db">
+          <div class="status-header">
+            <span class="status-title">Supabase Database</span>
+            <div class="status-badge" id="badge-db">
+              <span class="status-dot" id="dot-db"></span>
+              <span id="val-db">Yoxlanılır...</span>
+            </div>
+          </div>
+          <div class="status-error" id="err-db"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- METRİKALAR BÖLMƏSİ -->
+    <section class="debug-section">
+      <h2 class="section-title">Verilənlər Bazası Metrikaları</h2>
+      <div class="grid-3">
+        <div class="metric-card">
+          <div class="metric-icon users-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <div class="metric-info">
+            <div class="metric-label">Ümumi İstifadəçi</div>
+            <div class="metric-value" id="m-total-users">-</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon students-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+          </div>
+          <div class="metric-info">
+            <div class="metric-label">Şagirdlər</div>
+            <div class="metric-value" id="m-students">-</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon tutors-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+          </div>
+          <div class="metric-info">
+            <div class="metric-label">Repetitorlar</div>
+            <div class="metric-value" id="m-tutors">-</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon admins-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+          <div class="metric-info">
+            <div class="metric-label">Adminlər</div>
+            <div class="metric-value" id="m-admins">-</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon exams-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          </div>
+          <div class="metric-info">
+            <div class="metric-label">Ümumi Sınaq</div>
+            <div class="metric-value" id="m-exams">-</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon questions-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </div>
+          <div class="metric-info">
+            <div class="metric-label">Ümumi Sual</div>
+            <div class="metric-value" id="m-questions">-</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GƏLİR BÖLMƏSİ (Lokal) -->
+    <section class="debug-section">
+      <h2 class="section-title">Maliyyə (Lokal İdarəetmə)</h2>
+      <div class="revenue-card">
+        <div class="revenue-info">
+          <div class="metric-label">Qazanılan Ümumi Pul</div>
+          <div class="revenue-display" id="revenue-display">0.00 ₼</div>
+        </div>
+        <div class="revenue-controls">
+          <div class="input-group">
+            <span class="currency-symbol">₼</span>
+            <input type="number" id="revenue-input" placeholder="Məbləğ daxil et..." step="0.01">
+          </div>
+          <button id="btn-save-revenue" class="btn-save">Yadda saxla</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- İSTİFADƏÇİ BALANS İDARƏETMƏSİ (2 MƏRHƏLƏLİ) -->
+    <section class="debug-section">
+      <h2 class="section-title">İstifadəçi Balansını Artır (2 Mərhələli)</h2>
+      
+      <!-- Mərhələ 1: Axtarış -->
+      <div class="balance-card" id="step-1">
+        <div class="input-group no-symbol" style="flex: 2;">
+          <input type="text" id="bal-identifier" placeholder="İstifadəçi (E-poçt və ya Nömrə)">
+        </div>
+        <button id="btn-check-user" class="btn-save">İstifadəçini Yoxla</button>
+      </div>
+
+      <!-- Mərhələ 2: Təsdiq və Yeniləmə (İlkin olaraq gizlidir) -->
+      <div class="balance-card hidden" id="step-2">
+        <div class="user-info-box">
+          <div class="user-name" id="found-user-name">Ad Soyad</div>
+          <div class="user-balance">Cari balans: <span id="found-user-balance">0.00</span> ₼</div>
+        </div>
+        
+        <div class="input-group">
+          <span class="currency-symbol">₼</span>
+          <input type="number" id="bal-amount" placeholder="Yeni Balans (məs: 15.50)" step="0.01">
+        </div>
+        
+        <div class="action-buttons">
+          <button id="btn-update-balance" class="btn-save">Təsdiqlə və Yenilə</button>
+          <button id="btn-cancel-balance" class="btn-cancel">Ləğv et</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">Məlumat yeniləndi!</div>
+
+  <script src="debug.js"></script>
+</body>
+</html>
