@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Gradient Konsol · Sınaq İdarəetməsi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/debug.css">
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- ============================ SIDEBAR ============================ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo">G</div>
+        <div class="sidebar__brand-text">
+          <span class="sidebar__brand-name">Gradient</span>
+          <span class="sidebar__brand-sub">Admin Console</span>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav" id="sidebar-nav" aria-label="Konsol menyusu"></nav>
+
+      <div class="sidebar__footer">
+        <span class="sidebar__env">
+          <span class="env-dot"></span>
+          production
+        </span>
+        <button type="button" class="btn btn--ghost btn--sm" id="btn-signout">Çıxış</button>
+      </div>
+    </aside>
+
+    <!-- ============================== MAIN ============================= -->
+    <div class="main">
+
+      <header class="topbar">
+        <div class="row">
+          <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-expanded="false" aria-label="Menyunu aç">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <div class="topbar__heading">
+            <h1 class="topbar__title" id="page-title">Sınaq İdarəetməsi</h1>
+            <p class="topbar__subtitle" id="page-subtitle">Sınaq əlavə etmək, redaktə etmək və silmək</p>
+          </div>
+        </div>
+
+        <div class="topbar__actions">
+          <button type="button" class="btn btn--secondary btn--sm" id="btn-refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M20.49 9a9 9 0 0 0-14.9-3.4L1 10m22 4-4.59 4.4A9 9 0 0 1 3.51 15"></path></svg>
+            Yenilə
+          </button>
+          <button type="button" class="btn btn--primary btn--sm" id="btn-new-exam">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Yeni sınaq
+          </button>
+        </div>
+      </header>
+
+      <main class="page">
+
+        <!-- ------------------ SİNAQ SİYAHISI ------------------ -->
+        <section class="section" aria-labelledby="list-title">
+          <div class="section__head">
+            <h2 class="section__title" id="list-title">Sınaqlar</h2>
+            <div class="row">
+              <label class="sr-only" for="exam-search">Sınaq axtarışı</label>
+              <div class="input-group" style="width:auto;">
+                <span class="input-group__prefix" style="left:0.75rem;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="position:static;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </span>
+                <input class="input input--compact" type="text" id="exam-search"
+                       style="padding-left:2.25rem;min-width:240px;"
+                       placeholder="Başlıqla axtar..." maxlength="100" autocomplete="off">
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap" id="exam-table">
+            <div class="state">
+              <div class="skeleton skeleton--line" style="width:200px"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------ REDAKTOR ------------------ -->
+        <section class="section hidden" id="editor" aria-labelledby="editor-title">
+          <div class="section__head">
+            <h2 class="section__title" id="editor-title">Yeni sınaq</h2>
+            <button type="button" class="btn btn--ghost btn--sm" id="btn-close-editor">Bağla</button>
+          </div>
+
+          <div class="card">
+            <div class="card__header">
+              <div>
+                <div class="card__title">Sınaq məlumatları</div>
+                <div class="card__desc">Başlıq, fənn, qiymət və müddət</div>
+              </div>
+            </div>
+            <div class="card__body">
+              <form id="exam-form" novalidate>
+                <div class="form-grid">
+                  <div class="field" id="field-title">
+                    <label class="field__label" for="exam-title">Başlıq</label>
+                    <input class="input" type="text" id="exam-title" maxlength="200"
+                           placeholder="məs. Riyaziyyat — Mövzu 3" autocomplete="off">
+                    <span class="field__error">Başlıq 3–200 simvol arasında olmalıdır.</span>
+                  </div>
+
+                  <div class="field" id="field-subject">
+                    <label class="field__label" for="exam-subject">Fənn</label>
+                    <input class="input" type="text" id="exam-subject" maxlength="80"
+                           placeholder="məs. Riyaziyyat" autocomplete="off">
+                    <span class="field__error">Fənn 2–80 simvol arasında olmalıdır.</span>
+                  </div>
+
+                  <div class="field" id="field-price">
+                    <label class="field__label" for="exam-price">Qiymət (₼)</label>
+                    <div class="input-group input-group--prefixed">
+                      <span class="input-group__prefix">₼</span>
+                      <input class="input input--mono" type="text" id="exam-price"
+                             inputmode="decimal" maxlength="12" placeholder="0.00" autocomplete="off">
+                    </div>
+                    <span class="field__hint">0.00 = pulsuz sınaq</span>
+                    <span class="field__error">Qiymət 0–100000 arasında olmalıdır.</span>
+                  </div>
+
+                  <div class="field" id="field-duration">
+                    <label class="field__label" for="exam-duration">Müddət (dəq)</label>
+                    <input class="input input--mono" type="text" id="exam-duration"
+                           inputmode="numeric" maxlength="3" placeholder="30" autocomplete="off">
+                    <span class="field__error">Müddət 1–600 dəqiqə arasında olmalıdır.</span>
+                  </div>
+                </div>
+
+                <hr class="divider" style="margin:1.5rem 0;">
+
+                <div class="toolbar" style="margin-bottom:1rem;">
+                  <div>
+                    <div class="card__title">Sual bloku</div>
+                    <div class="card__desc" id="question-count">0 sual · JSON formatında saxlanılır</div>
+                  </div>
+                  <div class="row">
+                    <button type="button" class="btn btn--secondary btn--sm" id="btn-import-json">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
+                      JSON yapışdır
+                    </button>
+                    <button type="button" class="btn btn--primary btn--sm" id="btn-add-question">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                      Sual əlavə et
+                    </button>
+                  </div>
+                </div>
+
+                <div class="stack" id="questions-host"></div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn--primary" id="btn-save-exam">Sınağı saxla</button>
+                  <button type="button" class="btn btn--secondary" id="btn-cancel-exam">Ləğv et</button>
+                  <span class="text-muted" id="editor-mode" style="font-size:0.8125rem;margin-left:auto;"></span>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <div class="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span>Sınaqlar yalnız FastAPI backend üzərindən yazılır — bu konsol Supabase-ə birbaşa qoşulmur. Sual JSON-u serverdə yenidən təsdiqlənir (típ, uzunluq, variant açarı).</span>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- JSON import modalı -->
+  <div class="modal-backdrop hidden" id="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal__header">
+        <h2 class="modal__title" id="import-title">JSON formatında sual yapışdırın</h2>
+        <p class="modal__text">
+          Massiv daxilində hər element <code class="text-mono">{"text","options","correct_answer"}</code>
+          strukturunda olmalıdır. Yanlış format serverdə rədd ediləcək.
+        </p>
+      </div>
+      <div class="modal__body">
+        <div class="field" id="field-json">
+          <label class="field__label" for="json-input">JSON</label>
+          <textarea class="input input--mono" id="json-input" rows="10" spellcheck="false"
+                    maxlength="400000" placeholder='[{"text":"2+2=?","options":{"A":"3","B":"4","C":"5","D":"6"},"correct_answer":"B"}]'></textarea>
+          <span class="field__hint">Maksimum 400 000 simvol · 200 suala qədər</span>
+          <span class="field__error">JSON parse olunmadı — formatı yoxlayın.</span>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" id="btn-import-cancel">Ləğv et</button>
+        <button type="button" class="btn btn--primary" id="btn-import-confirm">İçəri al</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/debug-core.js"></script>
+  <script src="js/exams.js"></script>
+</body>
+</html>

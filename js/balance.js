@@ -29,6 +29,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const foundName = document.getElementById("found-name");
   const foundBalance = document.getElementById("found-balance");
   const foundIdentifier = document.getElementById("found-identifier");
+  const foundRole = document.getElementById("found-role");
+  const foundGrade = document.getElementById("found-grade");
+  const foundSubject = document.getElementById("found-subject");
+  const foundCreated = document.getElementById("found-created");
+  const foundAvatar = document.getElementById("user-avatar");
+  const foundTutorBox = document.getElementById("found-tutor-box");
+  const foundTutor = document.getElementById("found-tutor");
+  const foundStatsBox = document.getElementById("found-stats-box");
+  const foundStats = document.getElementById("found-stats");
 
   const balanceForm = document.getElementById("balance-form");
   const balanceInput = document.getElementById("new-balance");
@@ -102,8 +111,122 @@ document.addEventListener("DOMContentLoaded", () => {
     foundName.textContent = "—";
     foundBalance.textContent = "—";
     foundIdentifier.textContent = "—";
+    foundAvatar.textContent = "?";
+    foundRole.textContent = "Rol yoxdur";
+    foundGrade.textContent = "—";
+    foundSubject.textContent = "—";
+    foundCreated.textContent = "—";
+    foundTutorBox.classList.add("hidden");
+    foundStatsBox.classList.add("hidden");
     showStep(1);
     if (!keepJournal) renderJournal();
+  }
+
+  /* ---------------------------------------------------- PROFILE RENDERER -- */
+
+  const ROLE_LABELS = {
+    student: "Şagird",
+    tutor: "Repetitor",
+    admin: "Admin",
+  };
+
+  /** Ad Soyaddan avatar təxmini (serverdən gələn mətn, heç vaxt HTML yoxdur). */
+  function initialsOf(name) {
+    const parts = String(name || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2);
+    if (parts.length === 0) return "?";
+    return parts.map((p) => p.charAt(0)).join("");
+  }
+
+  function renderProfile(data) {
+    const name = `${data.first_name || ""} ${data.last_name || ""}`.trim() || "Adsız istifadəçi";
+    const balance = Number(data.balance);
+    const safeBalance = Number.isFinite(balance) ? balance : 0;
+
+    currentUser = {
+      identifier: String(data.identifier || "").slice(0, 120),
+      name,
+      balance: Math.round(safeBalance * 100) / 100,
+    };
+
+    foundName.textContent = name;
+    foundAvatar.textContent = initialsOf(name);
+    foundBalance.textContent = formatMoney(safeBalance);
+    foundIdentifier.textContent = currentUser.identifier;
+    foundRole.textContent = ROLE_LABELS[data.role] || String(data.role || "Rol yoxdur");
+    foundGrade.textContent = data.grade ? String(data.grade) : "Təyin edilməyib";
+    foundSubject.textContent = data.subject ? String(data.subject) : "Təyin edilməyib";
+    foundCreated.textContent = formatDate(data.created_at);
+
+    // Bağlı repetitor
+    if (data.tutor && typeof data.tutor === "object") {
+      const tutorName = `${data.tutor.first_name || ""} ${data.tutor.last_name || ""}`.trim();
+      foundTutor.textContent = "";
+      if (tutorName) {
+        foundTutor.appendChild(el("span", "table__strong", tutorName));
+      } else {
+        foundTutor.appendChild(el("span", "text-muted", "Repetitor məlumatı yoxdur"));
+      }
+      if (data.tutor.identifier) {
+        foundTutor.appendChild(
+          el("span", "text-mono text-muted", String(data.tutor.identifier).slice(0, 120))
+        );
+      }
+      if (data.tutor.tutor_code) {
+        foundTutor.appendChild(el("span", "tag", `Kod: ${String(data.tutor.tutor_code)}`));
+      }
+      foundTutorBox.classList.remove("hidden");
+    } else {
+      foundTutorBox.classList.add("hidden");
+    }
+
+    // Son nəticələr
+    const results = Array.isArray(data.recent_results) ? data.recent_results : [];
+    if (results.length > 0) {
+      const list = el("div", "stack stack--sm");
+      results.forEach((r) => {
+        const total = Number(r.total_questions) || 0;
+        const score = Number(r.score) || 0;
+        const pct = total > 0 ? Math.round((score / total) * 100) : 0;
+        const item = el("div", "user-info-box");
+
+        const left = el("div");
+        left.appendChild(el("span", "table__strong", `${score} / ${total}`));
+        left.appendChild(
+          el("span", "text-muted", `  ·  ${formatDate(r.created_at)}`)
+        );
+        item.appendChild(left);
+
+        item.appendChild(
+          el("span", `tag ${pct >= 60 ? "tag--credit" : "tag--debit"}`, `${pct}%`)
+        );
+        list.appendChild(item);
+      });
+
+      const stats = data.stats || {};
+      if (Number(stats.recent_attempts) > 0) {
+        list.appendChild(
+          el(
+            "div",
+            "text-muted",
+            `Orta xal (${stats.recent_attempts} cəhd): ${formatNumber(stats.average_score)}`
+          )
+        );
+      }
+
+      foundStats.textContent = "";
+      foundStats.appendChild(list);
+      foundStatsBox.classList.remove("hidden");
+    } else {
+      foundStatsBox.classList.add("hidden");
+    }
+
+    balanceInput.value = "";
+    balanceDelta.textContent = "—";
+    balanceDelta.className = "amount-preview__delta";
   }
 
   /* ------------------------------------------------------ LIVE PREVIEW -- */
@@ -267,23 +390,9 @@ document.addEventListener("DOMContentLoaded", () => {
         body: { identifier },
       });
 
-      const firstName = String(data.first_name || "").slice(0, 80);
-      const lastName = String(data.last_name || "").slice(0, 80);
-      const balance = Number(data.balance);
-
-      currentUser = {
-        identifier,
-        name: `${firstName} ${lastName}`.trim() || "Adsız istifadəçi",
-        balance: Number.isFinite(balance) ? Math.round(balance * 100) / 100 : 0,
-      };
-
-      foundName.textContent = currentUser.name;
-      foundBalance.textContent = formatMoney(currentUser.balance);
-      foundIdentifier.textContent = currentUser.identifier;
-
-      balanceInput.value = "";
-      balanceDelta.textContent = "—";
-      balanceDelta.className = "amount-preview__delta";
+      // Bütun profil məlumatları (rol, sinf, repetitor, nəticələr) təhlükəsiz
+      // şəkildə `textContent` ilə çəkilir.
+      renderProfile(data);
 
       showStep(2);
       window.setTimeout(() => balanceInput.focus(), 40);
