@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
       icon: "M16 7h6m0 0v6m0-6-7 7M8 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2",
     },
     {
-      href: "overview.html",
+      href: "index.html",
       title: "Bu səhifə",
       text: "Canlı metrikalar və servis vəziyyəti burada göstərilir.",
       icon: "M3 12l3-2.5 3 2.5M3 12h4l2 5 2-5h5l3-2.5M17 12l-3-2.5-3 2.5",
@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* --------------------------------------------------------- BOOTSTRAP --- */
   initShell({
-    page: "overview.html",
+    page: "index.html",
     title: "Ümumi Baxış",
     subtitle: "Platformanın canlı vəziyyəti və əsas metrikaları",
     autoRefresh: true,

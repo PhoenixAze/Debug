@@ -33,7 +33,9 @@ const AUTO_REFRESH_MS = 30000;
 /* Menyu konfiqurasiyası — bütün səhifələr eyni sidebar-ı qurur. */
 const NAV_ITEMS = [
   {
-    href: "overview.html",
+    // GitHub Pages repo kökündə `index.html` tələb edir — ona görə giriş səhifəsi
+    // bu adla saxlanılır (MPA quruluşu pozulmur, sadəcə fayl adı dəyişib).
+    href: "index.html",
     label: "Ümumi Baxış",
     desc: "Sistem vəziyyəti və metrikalar",
     icon: "M3 12l3-2.5 3 2.5M3 12h4l2 5 2-5h5l3-2.5M17 12l-3-2.5-3 2.5",
