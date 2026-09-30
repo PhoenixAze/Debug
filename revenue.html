@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Gradient Konsol · Gəlir Hesabatı</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/debug.css">
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- ============================ SIDEBAR ============================ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo">G</div>
+        <div class="sidebar__brand-text">
+          <span class="sidebar__brand-name">Gradient</span>
+          <span class="sidebar__brand-sub">Admin Console</span>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav" id="sidebar-nav" aria-label="Konsol menyusu"></nav>
+
+      <div class="sidebar__footer">
+        <span class="sidebar__env">
+          <span class="env-dot"></span>
+          production
+        </span>
+        <button type="button" class="btn btn--ghost btn--sm" id="btn-signout">Çıxış</button>
+      </div>
+    </aside>
+
+    <!-- ============================== MAIN ============================= -->
+    <div class="main">
+
+      <header class="topbar">
+        <div class="row">
+          <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-expanded="false" aria-label="Menyunu aç">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <div class="topbar__heading">
+            <h1 class="topbar__title" id="page-title">Gəlir Hesabatı</h1>
+            <p class="topbar__subtitle" id="page-subtitle">Qazancların qeydi, statistika və ixrac</p>
+          </div>
+        </div>
+
+        <div class="topbar__actions">
+          <button type="button" class="btn btn--secondary btn--sm" id="btn-export">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+            CSV ixrac
+          </button>
+        </div>
+      </header>
+
+      <main class="page">
+
+        <!-- ------------------ YEKUN GÖSTƏRİCİLƏR ------------------ -->
+        <section class="section" aria-labelledby="kpi-title">
+          <div class="section__head">
+            <h2 class="section__title" id="kpi-title">Yekun Göstəricilər</h2>
+            <span class="section__hint" id="kpi-updated">Yüklənir…</span>
+          </div>
+
+          <div class="grid-3" id="kpi-row">
+            <div class="stat">
+              <div class="stat__top">
+                <div class="skeleton skeleton--text" style="width:130px"></div>
+              </div>
+              <div class="skeleton skeleton--value"></div>
+            </div>
+            <div class="stat">
+              <div class="stat__top">
+                <div class="skeleton skeleton--text" style="width:130px"></div>
+              </div>
+              <div class="skeleton skeleton--value"></div>
+            </div>
+            <div class="stat">
+              <div class="stat__top">
+                <div class="skeleton skeleton--text" style="width:130px"></div>
+              </div>
+              <div class="skeleton skeleton--value"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------ YENİ QAZANÇ ------------------ -->
+        <section class="section" aria-labelledby="entry-title">
+          <div class="section__head">
+            <h2 class="section__title" id="entry-title">Yeni Qazanc Qeydi</h2>
+            <span class="section__hint">Hər giriş avtomatik tarixçəyə əlavə olunur</span>
+          </div>
+
+          <div class="card">
+            <div class="card__body">
+              <form id="revenue-form" novalidate>
+                <div class="form-grid">
+                  <div class="field" id="field-amount">
+                    <label class="field__label" for="revenue-amount">Məbləğ (₼)</label>
+                    <div class="input-group input-group--prefixed">
+                      <span class="input-group__prefix">₼</span>
+                      <input class="input input--mono" type="text" id="revenue-amount"
+                             inputmode="decimal" autocomplete="off" maxlength="15"
+                             placeholder="0.00">
+                    </div>
+                    <span class="field__hint">Maksimum 9 rəqəm, 2 onluq dəqiqlik</span>
+                    <span class="field__error">Düzgün məbləğ daxil edin (məs. 1250.50).</span>
+                  </div>
+
+                  <div class="field" id="field-category">
+                    <label class="field__label" for="revenue-category">Mənbə</label>
+                    <select class="input" id="revenue-category">
+                      <option value="Abunəyə" selected>Abunəyə</option>
+                      <option value="Kurs ödənişi">Kurs ödənişi</option>
+                      <option value="Repetitor ödənişi">Repetitor ödənişi</option>
+                      <option value="Əlavə xidmət">Əlavə xidmət</option>
+                      <option value="Digər">Digər</option>
+                    </select>
+                    <span class="field__hint">Hesabat qruplaşdırması üçün</span>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn--primary" id="btn-add-revenue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Qeydi əlavə et
+                  </button>
+                  <button type="button" class="btn btn--ghost" id="btn-reset-revenue">Formu təmizlə</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card__footer">
+              <div class="note note--warning">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Qeydlər yalnız bu brauzerin lokal yaddaşında saxlanılır. Digər cihazlarda görünməyəcək — məlumat bazasına köçürmək üçün backend tərəfdə saxlama endpoint-i əlavə olunmalıdır.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------ TARİXÇƏ ------------------ -->
+        <section class="section" aria-labelledby="history-title">
+          <div class="section__head">
+            <h2 class="section__title" id="history-title">Qeyd Tarixçəsi</h2>
+            <div class="row">
+              <label class="sr-only" for="filter-source">Mənbəyə görə süz</label>
+              <select class="input input--compact" id="filter-source">
+                <option value="">Bütün mənbələr</option>
+              </select>
+              <button type="button" class="btn btn--ghost btn--sm" id="btn-clear-history">Tarixçəni təmizlə</button>
+            </div>
+          </div>
+
+          <div class="table-wrap" id="history-table">
+            <div class="state">
+              <div class="skeleton skeleton--line" style="width:180px"></div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="js/debug-core.js"></script>
+  <script src="js/revenue.js"></script>
+</body>
+</html>

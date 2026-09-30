@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Gradient Konsol · Balans Artımı</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/debug.css">
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- ============================ SIDEBAR ============================ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo">G</div>
+        <div class="sidebar__brand-text">
+          <span class="sidebar__brand-name">Gradient</span>
+          <span class="sidebar__brand-sub">Admin Console</span>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav" id="sidebar-nav" aria-label="Konsol menyusu"></nav>
+
+      <div class="sidebar__footer">
+        <span class="sidebar__env">
+          <span class="env-dot"></span>
+          production
+        </span>
+        <button type="button" class="btn btn--ghost btn--sm" id="btn-signout">Çıxış</button>
+      </div>
+    </aside>
+
+    <!-- ============================== MAIN ============================= -->
+    <div class="main">
+
+      <header class="topbar">
+        <div class="row">
+          <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-expanded="false" aria-label="Menyunu aç">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <div class="topbar__heading">
+            <h1 class="topbar__title" id="page-title">Balans Artımı</h1>
+            <p class="topbar__subtitle" id="page-subtitle">İstifadəçi balansının idarə edilməsi</p>
+          </div>
+        </div>
+
+        <div class="topbar__actions">
+          <button type="button" class="btn btn--secondary btn--sm" id="btn-export-balance">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+            CSV ixrac
+          </button>
+        </div>
+      </header>
+
+      <main class="page">
+
+        <!-- ------------------ ADDIM GÖSTƏRİCİSİ ------------------ -->
+        <section class="section" aria-labelledby="steps-title">
+          <div class="section__head">
+            <h2 class="section__title" id="steps-title">İki Mərhələli Əməliyyat</h2>
+            <span class="section__hint">Əvvəlcə istifadəçi yoxlanılır, sonra dəyişiklik təsdiqlənir</span>
+          </div>
+
+          <ol class="row" id="stepper" style="list-style:none;gap:1.5rem;">
+            <li class="row" style="gap:0.625rem;">
+              <span class="status status--ok" id="step-badge-1">
+                <span class="status__dot"></span>
+                <span>1. İstifadəçi</span>
+              </span>
+              <span class="text-muted" style="font-size:0.8125rem;">Axtarış və doğrulama</span>
+            </li>
+            <li class="row" style="gap:0.625rem;">
+              <span class="status status--idle" id="step-badge-2">
+                <span class="status__dot"></span>
+                <span>2. Balans</span>
+              </span>
+              <span class="text-muted" style="font-size:0.8125rem;">Yeni dəyərin təsdiqi</span>
+            </li>
+          </ol>
+        </section>
+
+        <!-- ------------------ MƏRHƏLƏ 1: AXTARIŞ ------------------ -->
+        <section class="section hidden" id="step-1" aria-labelledby="step1-title">
+          <div class="section__head">
+            <h2 class="section__title" id="step1-title">Mərhələ 1 · İstifadəçini Tap</h2>
+          </div>
+
+          <div class="card">
+            <div class="card__body">
+              <form id="lookup-form" novalidate>
+                <div class="field" id="field-identifier">
+                  <label class="field__label" for="user-identifier">İstifadəçi identifikatoru</label>
+                  <div class="input-group">
+                    <input class="input" type="text" id="user-identifier"
+                           autocomplete="off" maxlength="120" spellcheck="false"
+                           placeholder="istifadeci@mail.com və ya +994501234567">
+                  </div>
+                  <span class="field__hint">Qeydiyyatdakı e-poçt ünvanı və ya telefon nömrəsi ilə dəqiq uyğun gəlir</span>
+                  <span class="field__error">E-poçt və ya telefon nömrəsi formatını yoxlayın.</span>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn--primary" id="btn-lookup">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    İstifadəçini yoxla
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------ MƏRHƏLƏ 2: BALANS ------------------ -->
+        <section class="section hidden" id="step-2" aria-labelledby="step2-title">
+          <div class="section__head">
+            <h2 class="section__title" id="step2-title">Mərhələ 2 · Balansı Yenilə</h2>
+            <button type="button" class="btn btn--ghost btn--sm" id="btn-reset-lookup">Başqa istifadəçi axtar</button>
+          </div>
+
+          <div class="grid-2">
+            <!-- Tapılmış istifadəçi -->
+            <div class="card">
+              <div class="card__header">
+                <div>
+                  <div class="card__title">Tapılmış istifadəçi</div>
+                  <div class="card__desc">Yoxlanılmış hesab</div>
+                </div>
+                <span class="status status--ok" id="user-status">
+                  <span class="status__dot"></span>
+                  <span>Təsdiqləndi</span>
+                </span>
+              </div>
+              <div class="card__body stack">
+                <div class="kv">
+                  <span class="kv__label">Ad Soyad</span>
+                  <span class="kv__value" id="found-name" style="font-size:1rem;">—</span>
+                </div>
+                <hr class="divider">
+                <div class="kv">
+                  <span class="kv__label">Cari balans</span>
+                  <span class="kv__value" id="found-balance">—</span>
+                </div>
+                <hr class="divider">
+                <div class="kv">
+                  <span class="kv__label">Identifikator</span>
+                  <span class="text-mono" id="found-identifier" style="font-size:0.8125rem;color:var(--text-secondary);word-break:break-all;">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Yeniləmə formu -->
+            <div class="card">
+              <div class="card__header">
+                <div>
+                  <div class="card__title">Yeni balans dəyəri</div>
+                  <div class="card__desc">Məbləğ mütləq dəyər kimi yazılır (artım deyil)</div>
+                </div>
+              </div>
+              <div class="card__body">
+                <form id="balance-form" novalidate>
+                  <div class="field" id="field-balance">
+                    <label class="field__label" for="new-balance">Yeni balans (₼)</label>
+                    <div class="input-group input-group--prefixed">
+                      <span class="input-group__prefix">₼</span>
+                      <input class="input input--mono" type="text" id="new-balance"
+                             inputmode="decimal" autocomplete="off" maxlength="15"
+                             placeholder="0.00">
+                    </div>
+                    <span class="field__hint">0.00 daxil etmək balansı sıfırlayır</span>
+                    <span class="field__error">0.00 ilə 999999999.99 arasında düzgün məbləğ daxil edin.</span>
+                  </div>
+
+                  <div class="amount-preview" id="balance-preview" style="margin-top:1rem;">
+                    <span>Dəyişiklik:</span>
+                    <span class="amount-preview__delta" id="balance-delta">—</span>
+                  </div>
+
+                  <div class="form-actions">
+                    <button type="submit" class="btn btn--primary" id="btn-update-balance">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      Təsdiqlə və yenilə
+                    </button>
+                    <button type="button" class="btn btn--secondary" id="btn-cancel-balance">Ləğv et</button>
+                  </div>
+                </form>
+              </div>
+              <div class="card__footer">
+                <div class="note note--warning">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  <span>Bu əməliyyat balansı dərhal dəyişir. Əvvəlcə dəyəri nəzarət edin, sonra təsdiqləyin.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------ JURNAL ------------------ -->
+        <section class="section" aria-labelledby="journal-title">
+          <div class="section__head">
+            <h2 class="section__title" id="journal-title">Bu Səhifədəki Əməliyyatlar</h2>
+            <span class="section__hint">Lokal jurnal · 50 ən son qeyd</span>
+          </div>
+
+          <div class="table-wrap" id="journal-table"></div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="js/debug-core.js"></script>
+  <script src="js/balance.js"></script>
+</body>
+</html>
