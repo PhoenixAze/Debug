@@ -183,6 +183,13 @@ document.addEventListener("DOMContentLoaded", () => {
       foundTutorBox.classList.add("hidden");
     }
 
+    // KÖHNÜ BACKEND FALLBACK: server hələ yeni `check_user` formasını
+    // qaytarmırsa yalnız ad/balans mövcuddur — panel heç vaxt "bozuk" görünmür,
+    // sadəcə olmayan sahələr "məlumat yoxdur" olaraq göstərilir.
+    if (!data || typeof data.first_name === "undefined") {
+      return;
+    }
+
     // Son nəticələr
     const results = Array.isArray(data.recent_results) ? data.recent_results : [];
     if (results.length > 0) {

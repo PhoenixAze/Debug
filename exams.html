@@ -114,9 +114,15 @@
 
                   <div class="field" id="field-subject">
                     <label class="field__label" for="exam-subject">Fənn</label>
-                    <input class="input" type="text" id="exam-subject" maxlength="80"
-                           placeholder="məs. Riyaziyyat" autocomplete="off">
-                    <span class="field__error">Fənn 2–80 simvol arasında olmalıdır.</span>
+                    <select class="input" id="exam-subject"></select>
+                    <span class="field__error">Fənn seçin (2–80 simvol).</span>
+                  </div>
+
+                  <div class="field hidden" id="field-subject-custom">
+                    <label class="field__label" for="exam-subject-custom">Fənn adı (əl ilə)</label>
+                    <input class="input" type="text" id="exam-subject-custom" maxlength="80"
+                           placeholder="Siyahıda olmayan fənn adı" autocomplete="off">
+                    <span class="field__hint">Bu ad analitikada ayrıca fənn kimi göstəriləcək.</span>
                   </div>
 
                   <div class="field" id="field-price">
@@ -184,8 +190,11 @@
       <div class="modal__header">
         <h2 class="modal__title" id="import-title">JSON formatında sual yapışdırın</h2>
         <p class="modal__text">
-          Massiv daxilində hər element <code class="text-mono">{"text","options","correct_answer"}</code>
-          strukturunda olmalıdır. Yanlış format serverdə rədd ediləcək.
+          Massiv daxilində hər element <code class="text-mono">q_tag</code>,
+          <code class="text-mono">text</code>, <code class="text-mono">options</code> və
+          <code class="text-mono">correct_answer</code> açarlarına malik olmalıdır.
+          Variantlar <strong>A–H</strong> arasında ən azı 2, ən çox 8 ədəd ola bilər.
+          Yanlış format serverdə rədd ediləcək.
         </p>
       </div>
       <div class="modal__body">
@@ -193,7 +202,7 @@
           <label class="field__label" for="json-input">JSON</label>
           <textarea class="input input--mono" id="json-input" rows="10" spellcheck="false"
                     maxlength="400000" placeholder='[{"text":"2+2=?","options":{"A":"3","B":"4","C":"5","D":"6"},"correct_answer":"B"}]'></textarea>
-          <span class="field__hint">Maksimum 400 000 simvol · 200 suala qədər</span>
+          <span class="field__hint">Maksimum 400 000 simvol · 200 suala qədər · variantlar A–H</span>
           <span class="field__error">JSON parse olunmadı — formatı yoxlayın.</span>
         </div>
       </div>

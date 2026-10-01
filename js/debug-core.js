@@ -314,6 +314,18 @@ function requestSecret() {
 class ApiAuthError extends Error {}
 class ApiError extends Error {}
 
+/** 404 = backend hələ deploy edilməyib (endpoint mövcud deyil). */
+class ApiNotFoundError extends Error {
+  constructor(endpoint) {
+    super(
+      `Endpoint serverda yoxdur: ${endpoint}. Bu o deməkdir ki, backend hələ ` +
+        `yeni versiyaya deploy edilməyib (Git push + Render deploy).`
+    );
+    this.name = "ApiNotFoundError";
+    this.endpoint = endpoint;
+  }
+}
+
 /**
  * Bütün debug sorğuları buradan keçir. Heç vaxt backend detalları (stack trace,
  * DB xəta mətnləri) istifadəçiyə ötürülmür — `detail` yalnız serverin öz
@@ -338,6 +350,10 @@ async function apiRequest(path, options = {}) {
     throw new ApiAuthError("Debug açarı rədd edildi. Səhifə yenilənir...");
   }
 
+  if (response.status === 404) {
+    throw new ApiNotFoundError(path);
+  }
+
   let data = null;
   try {
     data = await response.json();
@@ -346,9 +362,17 @@ async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
-    const detail =
-      data && typeof data.detail === "string" ? data.detail : "Sorğu uğursuz oldu.";
-    throw new ApiError(detail);
+    // FastAPI validation xətaları (422) massiv formatında olur — istifadəçiyə
+    // təbəssümatsız "422 Unprocessable Entity" göstərmək əvəzinə ilk xəta.
+    let detail = null;
+    if (data && typeof data.detail === "string") {
+      detail = data.detail;
+    } else if (data && Array.isArray(data.detail) && data.detail.length > 0) {
+      const first = data.detail[0];
+      const field = Array.isArray(first.loc) ? first.loc[first.loc.length - 1] : null;
+      detail = field ? `${field}: ${first.msg}` : first.msg;
+    }
+    throw new ApiError(detail || `Sorğu uğursuz oldu (HTTP ${response.status}).`);
   }
 
   return data;
@@ -369,6 +393,46 @@ async function apiWithAuth(path, options = {}) {
       return apiRequest(path, options);
     }
     throw error;
+  }
+}
+
+/**
+ * Backend hələ yeni endpoint-ləri deploy etməyibsə (404) köhnə, minimal
+ * cavab formaları ilə işləyən fallback. Bu, konsolu "yarım işlək" vəziyyətdə
+ * qoymur — istifadəçi dərhal nəyin çalışmadığını görür.
+ *
+ * @returns {Promise<{stale: boolean, data: Object|null, error: Error|null}>}
+ */
+async function apiWithFallback(path, options = {}, legacyBuilder = null) {
+  try {
+    const data = await apiWithAuth(path, options);
+    return { stale: false, data, error: null };
+  } catch (error) {
+    if (error instanceof ApiNotFoundError && typeof legacyBuilder === "function") {
+      try {
+        const legacy = await legacyBuilder();
+        return { stale: true, data: legacy, error: null };
+      } catch (legacyError) {
+        return { stale: true, data: null, error: legacyError };
+      }
+    }
+    return { stale: false, data: null, error };
+  }
+}
+
+/** Backend versiyasını yoxlayır (endpoint mövcudluğu). */
+async function checkBackendVersion() {
+  try {
+    await apiWithAuth("/stats");
+    return { online: true, hasExamApi: true };
+  } catch (error) {
+    if (error instanceof ApiNotFoundError) {
+      return { online: false, hasExamApi: false, error };
+    }
+    if (error instanceof ApiAuthError) {
+      return { online: false, hasExamApi: false, needsAuth: true, error };
+    }
+    return { online: false, hasExamApi: false, error };
   }
 }
 
@@ -554,10 +618,21 @@ function writeStore(key, value) {
  * nəzarət altına alınır.
  */
 function downloadCsv(filename, headers, rows) {
+  // Sabit dəyərlər — regex/şablon literal-ları içində tək dətliqdən
+  // qaçmaq defal və alət uyğunsuzluğu yaratmasın.
+  const CSV_QUOTE = '"';
+  const CSV_APOSTROPHE = "'";
+  // Formula injection üçün: =, +, -, @, tab, CR ilə başlayan hüceyrə
+  // təhlükəlidir (Excel/LibreOffice onu formula kimi icra edir).
+  const CSV_FORMULA_START = /^[=+\-@\t\r]/;
+  const CSV_NEEDS_QUOTE = new RegExp("[" + CSV_QUOTE + "\\n\\r,]");
+
   const escapeCell = (value) => {
     let text = value === null || value === undefined ? "" : String(value);
-    if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
-    if (/["\n\r,]/.test(text)) text = `"${text.replace(/"/g, '""')}"`;
+    if (CSV_FORMULA_START.test(text)) text = CSV_APOSTROPHE + text;
+    if (CSV_NEEDS_QUOTE.test(text)) {
+      text = CSV_QUOTE + text.split(CSV_QUOTE).join(CSV_QUOTE + CSV_QUOTE) + CSV_QUOTE;
+    }
     return text;
   };
 

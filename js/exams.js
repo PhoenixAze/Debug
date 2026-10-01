@@ -13,12 +13,48 @@
 
 "use strict";
 
-const OPTION_KEYS = ["A", "B", "C", "D"];
+/* Backend ilə TAM uyğunlaşan variant diapazonu: A..H (8 variant).
+   Əvvəlki A–D məhdudiyyəti istifadəçini "E variantını yazmışam" xətasıyla
+   dayandırırdı — indi hər 8 variant dəstəklənir. */
+const OPTION_KEYS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+const MIN_OPTIONS = 2;
 const MAX_QUESTIONS = 200;
 const MAX_TEXT = 2000;
 const MAX_OPTION_TEXT = 500;
 const MAX_TAG_LENGTH = 80;
 const UNSAFE_JSON_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+/**
+ * Mövzu teqindən silinən təhlükəli simvollar (HTML/XML sətirləri).
+ * `RegExp` obyekti ilə yaradılır — literal regex daxilində tək dətliqdə
+ * müəyyən edilən hərflər sintaksis yoxlayıcı alətlərini (və bəzi
+ * linters-ı) çağırır.
+ */
+const UNSAFE_TAG_CHARS = new RegExp("[<>&\"" + "'`\\\\]", "g");
+
+/* Fənn siyahısı — analitika (`analytics.py`) və repetitor paneli ilə uyğun.
+   "Digər" seçiləndə əl ilə yazmaq açılır. */
+const SUBJECTS = [
+  "Riyaziyyat",
+  "Fizika",
+  "Kimya",
+  "Biologiya",
+  "Tarix",
+  "Coğrafiya",
+  "Ədəbiyyat",
+  "Dil və ədəbiyyat",
+  "İngilis dili",
+  "Rus dili",
+  "Alman dili",
+  "İnformatika",
+  "İqtisadiyyat",
+  "Hüquq",
+  "Fəlsəfə",
+  "Psixologiya",
+  "Cələbəkərbazlıq",
+  "İslam Hədisəsi",
+  "Digər",
+];
 
 document.addEventListener("DOMContentLoaded", () => {
   const examTable = document.getElementById("exam-table");
@@ -31,6 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const titleInput = document.getElementById("exam-title");
   const subjectInput = document.getElementById("exam-subject");
+  const subjectCustom = document.getElementById("exam-subject-custom");
+  const fieldSubjectCustom = document.getElementById("field-subject-custom");
   const priceInput = document.getElementById("exam-price");
   const durationInput = document.getElementById("exam-duration");
 
@@ -51,6 +89,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ------------------------------------------------------ YARDIMCI ---- */
 
+  /** Boş variant xəritəsi (A..H). */
+  function emptyOptions() {
+    const opts = {};
+    OPTION_KEYS.forEach((k) => {
+      opts[k] = "";
+    });
+    return opts;
+  }
+
+  /** JSON-dan gələn variantları A..H diapazonuna normalize edir. */
+  function normalizeOptions(source) {
+    const opts = emptyOptions();
+    if (!source || typeof source !== "object" || Array.isArray(source)) return opts;
+    Object.keys(source).forEach((rawKey) => {
+      const key = String(rawKey).trim().toUpperCase();
+      if (OPTION_KEYS.includes(key)) {
+        opts[key] = String(source[rawKey] ?? "").trim();
+      }
+    });
+    return opts;
+  }
+
   function setError(field, message) {
     const err = field.querySelector(".field__error");
     if (err && message) err.textContent = message;
@@ -61,11 +121,11 @@ document.addEventListener("DOMContentLoaded", () => {
     field.classList.remove("has-error");
   }
 
-  [titleInput, subjectInput, priceInput, durationInput].forEach((input) => {
+  [titleInput, subjectCustom, priceInput, durationInput].forEach((input) => {
     input.addEventListener("input", () => {
       const map = {
         "exam-title": fieldTitle,
-        "exam-subject": fieldSubject,
+        "exam-subject-custom": fieldSubject,
         "exam-price": fieldPrice,
         "exam-duration": fieldDuration,
       };
@@ -73,6 +133,38 @@ document.addEventListener("DOMContentLoaded", () => {
       if (field) clearError(field);
     });
   });
+
+  /* ---------------------------------------------------- FƏNN SEÇİMİ ---- */
+
+  function populateSubjects() {
+    subjectInput.textContent = "";
+    SUBJECTS.forEach((name) => {
+      const opt = el("option", null, name);
+      opt.value = name;
+      subjectInput.appendChild(opt);
+    });
+    subjectInput.value = "Riyaziyyat";
+  }
+
+  // "Digər" seçiləndə əl ilə yazma sahəsi açılır.
+  subjectInput.addEventListener("change", () => {
+    const isCustom = subjectInput.value === "Digər";
+    fieldSubjectCustom.classList.toggle("hidden", !isCustom);
+    if (isCustom) {
+      subjectCustom.focus();
+    } else {
+      clearError(fieldSubject);
+      subjectCustom.value = "";
+    }
+  });
+
+  /** Seçilmiş fənn — "Digər" halında əl ilə yazılan dəyəri qaytarır. */
+  function selectedSubject() {
+    if (subjectInput.value === "Digər") {
+      return subjectCustom.value.trim();
+    }
+    return subjectInput.value;
+  }
 
   /* --------------------------------------------------- SUAL REDAKTORU -- */
 
@@ -91,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
     draftQuestions.push({
       text: "",
       q_tag: "",
-      options: { A: "", B: "", C: "", D: "" },
+      options: emptyOptions(),
       correct_answer: "A",
     });
     renderQuestions();
@@ -209,42 +301,68 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       body.appendChild(tagField);
 
-      // Variantlar
-      OPTION_KEYS.forEach((key) => {
-        const row = el("div", "option-row");
+      // Variantlar — A..H arası dinamik say (boş olanlar gizlidir).
+      const optionsHost = el("div", "stack stack--sm");
 
-        const keyBtn = el(
-          "button",
-          `option-row__key${question.correct_answer === key ? " is-correct" : ""}`,
-          key
-        );
-        keyBtn.type = "button";
-        keyBtn.setAttribute(
-          "aria-label",
-          `Düzgün cavab: ${key}`
-        );
-        keyBtn.addEventListener("click", () => {
-          draftQuestions[index].correct_answer = key;
-          renderQuestions();
+      const renderOptionRows = () => {
+        optionsHost.textContent = "";
+        const state = draftQuestions[index];
+
+        // İstifadəçi nə qədər doldurubsa, o qədər sətir göstərilir
+        // (minimum 4, maksimum 8) — boş sətirlər ekranı zibilləmir.
+        const filledCount = OPTION_KEYS.filter((k) => (state.options[k] || "").trim()).length;
+        const visibleCount = Math.max(4, Math.min(OPTION_KEYS.length, filledCount + 1));
+
+        OPTION_KEYS.slice(0, visibleCount).forEach((key) => {
+          const row = el("div", "option-row");
+
+          const keyBtn = el(
+            "button",
+            `option-row__key${state.correct_answer === key ? " is-correct" : ""}`,
+            key
+          );
+          keyBtn.type = "button";
+          keyBtn.setAttribute("aria-label", `${key} variantını düzgün cavab seç`);
+          keyBtn.title = "Düzgün cavabı bu variantda işarələmək üçün klikləyin";
+          keyBtn.addEventListener("click", () => {
+            if (!(state.options[key] || "").trim()) {
+              toast(`${key} variantı boşdur — əvvəlcə mətn yazın.`, "warning");
+              return;
+            }
+            state.correct_answer = key;
+            renderOptionRows();
+            // Başlıq badge-i də yenilənir.
+            const badge = card.querySelector(".question-card__index .tag");
+            if (badge) badge.textContent = `Cavab: ${key}`;
+          });
+
+          const input = el("input", "input");
+          input.type = "text";
+          input.maxLength = String(MAX_OPTION_TEXT);
+          input.value = state.options[key] || "";
+          input.placeholder = `Variant ${key}`;
+          input.addEventListener("input", () => {
+            state.options[key] = input.value;
+            // Yeni variant doldurulduqda sətir sayı arta bilər.
+            const nextCount = Math.max(4, Math.min(OPTION_KEYS.length, filledCount + 1));
+            if (nextCount !== visibleCount) renderOptionRows();
+          });
+
+          row.appendChild(keyBtn);
+          row.appendChild(input);
+          optionsHost.appendChild(row);
         });
+      };
 
-        const input = el("input", "input");
-        input.type = "text";
-        input.maxLength = String(MAX_OPTION_TEXT);
-        input.value = question.options[key] || "";
-        input.placeholder = `Variant ${key}`;
-        input.addEventListener("input", () => {
-          draftQuestions[index].options[key] = input.value;
-        });
-
-        row.appendChild(keyBtn);
-        row.appendChild(input);
-        body.appendChild(row);
-      });
+      renderOptionRows();
+      body.appendChild(optionsHost);
 
       const hint = el("div", "answer-preview");
       hint.appendChild(
-        document.createTextNode("Düzgün cavabı seçmək üçün variant hərfinə klikləyin.")
+        document.createTextNode(
+          "Düzgün cavabı seçmək üçün variant hərfinin solundakı düyməyə klikləyin. " +
+            "8 variantadək (A–H) dəstəklənir."
+        )
       );
       body.appendChild(hint);
 
@@ -307,8 +425,14 @@ document.addEventListener("DOMContentLoaded", () => {
           return { ok: false, error: `${i + 1}-ci variantda təhlükəli açar: ${rawKey}` };
         }
         const key = String(rawKey).trim().toUpperCase();
+        // A–H arası 8 variant dəstəklənir (əvvəl yalnız A–D idi).
         if (!OPTION_KEYS.includes(key)) {
-          return { ok: false, error: `${i + 1}-ci sualda variant açarı A–D aralığında deyil: ${rawKey}` };
+          return {
+            ok: false,
+            error:
+              `${i + 1}-ci sualda variant açarı "${rawKey}" dəstəklənmir. ` +
+              `Dəstəklənən: ${OPTION_KEYS.join(", ")} (8 varianta qədər).`,
+          };
         }
         const value = String(options[rawKey] ?? "").trim();
         if (!value || value.length > MAX_OPTION_TEXT) {
@@ -317,13 +441,27 @@ document.addEventListener("DOMContentLoaded", () => {
         cleaned[key] = value;
       }
 
-      if (Object.keys(cleaned).length < 2) {
-        return { ok: false, error: `${i + 1}-ci sualda ən azı 2 variant olmalıdır.` };
+      if (Object.keys(cleaned).length < MIN_OPTIONS) {
+        return {
+          ok: false,
+          error: `${i + 1}-ci sualda ən azı ${MIN_OPTIONS} variant olmalıdır (verilən: ${Object.keys(cleaned).length}).`,
+        };
       }
 
       const answer = String(item.correct_answer ?? "").trim().toUpperCase();
-      if (!OPTION_KEYS.includes(answer) || !cleaned[answer]) {
-        return { ok: false, error: `${i + 1}-ci sualın "correct_answer" düzgün variant deyil.` };
+      if (!OPTION_KEYS.includes(answer)) {
+        return {
+          ok: false,
+          error:
+            `${i + 1}-ci sualın "correct_answer" "${answer}" dəstəklənmir. ` +
+            `Dəstəklənən: ${OPTION_KEYS.join(", ")}.`,
+        };
+      }
+      if (!cleaned[answer]) {
+        return {
+          ok: false,
+          error: `${i + 1}-ci sualda "correct_answer": "${answer}" var lakin options içində yoxdur.`,
+        };
       }
 
       // q_tag iştəyə bağlıdır (boş ola bilər) — format yoxlaması backenddə
@@ -391,6 +529,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await apiWithAuth(`/exams?${params.toString()}`);
       renderExamList(data.exams || []);
     } catch (error) {
+      if (error instanceof ApiNotFoundError) {
+        renderState(examTable, {
+          variant: "error",
+          title: "Backend hələ yenilənməyib",
+          text:
+            "Serverdə /api/v1/debug/exams endpoint-i yoxdur. Bu, backend kodunun " +
+            "GitHub-a push edilmədiyi və Render-də yenidən deploy olunmadığı " +
+            "deməkdir. Sınaq idarəetməsi işləmək üçün Gradient-backend reposunu " +
+            "push edin və deploy tamamlanana qədər gözləyin.",
+          actionLabel: "Yenidən yoxla",
+          onAction: () => loadExams(),
+        });
+        return;
+      }
       if (error instanceof ApiAuthError) {
         renderState(examTable, {
           variant: "error",
@@ -554,7 +706,7 @@ document.addEventListener("DOMContentLoaded", () => {
         q_tag: String(q.q_tag || "")
           .slice(0, MAX_TAG_LENGTH)
           // HTML/XML sətirləri mənbədə kəsilir (XSS + log injection).
-          .replace(/[<>&"'`\\]/g, "")
+          .replace(UNSAFE_TAG_CHARS, "")
           .trim(),
         ...(q.explanation ? { explanation: String(q.explanation) } : {}),
       })),
@@ -566,7 +718,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!examId) {
       editingId = null;
       titleInput.value = "";
-      subjectInput.value = "";
+      populateSubjects();
+      fieldSubjectCustom.classList.add("hidden");
+      subjectCustom.value = "";
       priceInput.value = "0.00";
       durationInput.value = "30";
       draftQuestions = [];
@@ -583,18 +737,25 @@ document.addEventListener("DOMContentLoaded", () => {
       apiWithAuth(`/exams/${examId}`).then((exam) => {
         editingId = examId;
         titleInput.value = String(exam.title || "");
-        subjectInput.value = String(exam.subject || "");
+
+        // Mövcud fənn siyahıdadırsa seç, deyilsə "Digər" + əl ilə doldur.
+        const existingSubject = String(exam.subject || "");
+        if (SUBJECTS.includes(existingSubject)) {
+          subjectInput.value = existingSubject;
+          fieldSubjectCustom.classList.add("hidden");
+          subjectCustom.value = "";
+        } else {
+          subjectInput.value = "Digər";
+          fieldSubjectCustom.classList.remove("hidden");
+          subjectCustom.value = existingSubject;
+        }
+
         priceInput.value = Number(exam.price || 0).toFixed(2);
         durationInput.value = String(exam.duration_minutes || 30);
 
         const questions = Array.isArray(exam.questions) ? exam.questions : [];
         draftQuestions = questions.map((q) => {
-          const options = { A: "", B: "", C: "", D: "" };
-          const src = q.options && typeof q.options === "object" ? q.options : {};
-          Object.keys(src).forEach((k) => {
-            const key = String(k).toUpperCase();
-            if (OPTION_KEYS.includes(key)) options[key] = String(src[k]);
-          });
+          const options = normalizeOptions(q.options);
           return {
             text: String(q.text || ""),
             options,
@@ -635,9 +796,14 @@ document.addEventListener("DOMContentLoaded", () => {
       ok = false;
     }
 
-    const subject = subjectInput.value.trim();
+    const subject = selectedSubject();
     if (subject.length < 2 || subject.length > 80) {
-      setError(fieldSubject);
+      setError(
+        fieldSubject,
+        subjectInput.value === "Digər"
+          ? "«Digər» seçilib — fənn adını əl ilə yazın."
+          : "Fənn seçin."
+      );
       ok = false;
     }
 
@@ -670,8 +836,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
       }
       const filled = OPTION_KEYS.filter((k) => (q.options[k] || "").trim());
-      if (filled.length < 2) {
-        toast(`${i + 1}-ci sualda ən azı 2 variant doldurulmalıdır.`, "warning");
+      if (filled.length < MIN_OPTIONS) {
+        toast(
+          `${i + 1}-ci sualda ən azı ${MIN_OPTIONS} variant doldurulmalıdır ` +
+            `(doldurulan: ${filled.length}).`,
+          "warning"
+        );
         return null;
       }
       if (!q.options[q.correct_answer]) {
@@ -690,14 +860,15 @@ document.addEventListener("DOMContentLoaded", () => {
       is_active: true,
       questions: draftQuestions.map((q) => ({
         text: q.text.trim(),
-        options: {
-          A: (q.options.A || "").trim(),
-          B: (q.options.B || "").trim(),
-          C: (q.options.C || "").trim(),
-          D: (q.options.D || "").trim(),
-        },
+        // Boş variantlar GÖNDƏRİLMİR — əks halda backend "ən azı 2 variant"
+        // yoxlamasını keçmir və istifadəçi səhv xəta alır.
+        options: OPTION_KEYS.reduce((acc, key) => {
+          const value = (q.options[key] || "").trim();
+          if (value) acc[key] = value;
+          return acc;
+        }, {}),
         correct_answer: q.correct_answer,
-        q_tag: (q.q_tag || "").replace(/[<>&"'`\\]/g, "").trim().slice(0, MAX_TAG_LENGTH),
+        q_tag: (q.q_tag || "").replace(UNSAFE_TAG_CHARS, "").trim().slice(0, MAX_TAG_LENGTH),
       })),
     };
   }
@@ -749,6 +920,7 @@ document.addEventListener("DOMContentLoaded", () => {
     onRefresh: loadExams,
   });
 
+  populateSubjects();
   renderQuestions();
   loadExams();
 });
