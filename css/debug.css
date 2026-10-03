@@ -41,6 +41,7 @@
   --success-subtle: #ecfdf3;
   --success-border: #abefc6;
   --danger: #b42318;
+  --danger-active: #912018;
   --danger-subtle: #fef3f2;
   --danger-border: #fecdca;
   --warning: #b54708;
@@ -69,9 +70,94 @@
   --shadow-lg: 0 12px 16px -4px rgba(16, 24, 40, 0.08),
     0 4px 6px -2px rgba(16, 24, 40, 0.03);
 
+  /* Modal arxa planı (overlay) */
+  --overlay-backdrop: rgba(16, 24, 40, 0.55);
+
+  /* Switch knob rəngi (checkbox/slider üzərindəki dairə) */
+  --switch-knob: #ffffff;
+
   /* Layout */
   --sidebar-w: 260px;
   --topbar-h: 64px;
+
+  /* Yerli brauzer elementləri (select, scrollbar, checkbox) də temaya uyğun
+     rənglənsin — yoxsa tünd rejimdə açıq ağ dropdown-lar qalır. */
+  color-scheme: light;
+
+  /* Skeleton shimmer parıltısı (bərabər şəffaflıqlı 3 stop) */
+  --shimmer-from: rgba(255, 255, 255, 0);
+  --shimmer-via: rgba(255, 255, 255, 0.65);
+}
+
+/* ---------------------------------------------------------------------------
+   TÜND REJİM (`[data-theme="dark"]`)
+   ---------------------------------------------------------------------------
+   Bütün komponentlər yuxarıdakı token-lərdən istifadə edir, ona görə burada
+   YALNIZ dəyərləri override etmək kifayətdir (komponent CSS-i dəyişmir).
+   Kontrast WCAG AA səviyyəsində saxlanılır: `--text-primary` (#E6EAF2)
+   `--surface-page` (#0b1220) üzərində ~15:1, `--text-secondary` ~9:1.
+   --------------------------------------------------------------------------- */
+[data-theme="dark"] {
+  /* Surface */
+  --surface-page: #0b1220;
+  --surface-card: #131c2e;
+  --surface-subtle: #182338;
+  --surface-inset: #1c2942;
+  --surface-hover: #22314f;
+
+  /* Border */
+  --border: #26334d;
+  --border-strong: #364562;
+  --border-focus: #818cf8;
+
+  /* Text */
+  --text-primary: #e6eaf2;
+  --text-secondary: #b3bed4;
+  --text-tertiary: #8b97b0;
+  --text-inverse: #0b1220;
+
+  /* Accent — tünd fonda açıq ton daha oxunaqlıdır */
+  --accent: #a5b4fc;
+  --accent-hover: #c7d2fe;
+  --accent-active: #e0e7ff;
+  --accent-subtle: #1e2a49;
+  --accent-border: #3d4a7a;
+
+  /* Semantic */
+  --success: #6ce9a6;
+  --success-subtle: #0f3a26;
+  --success-border: #2b6a4a;
+  --danger: #fda29b;
+  --danger-active: #f97066;
+  --danger-subtle: #4a1d18;
+  --danger-border: #8a3a32;
+  --warning: #fec84b;
+  --warning-subtle: #4a3208;
+  --warning-border: #8a6420;
+  --neutral: #b3bed4;
+  --neutral-subtle: #1c2942;
+  --neutral-border: #26334d;
+
+  /* Tünd rejimdə daha dərin qat lazımdır ki, modal kartı (--surface-card)
+     arxasından aşkarlansın. */
+  --overlay-backdrop: rgba(2, 6, 16, 0.72);
+
+  /* Tünd rejimdə `checked` halında `--accent` (#a5b4fc) işıq rəngdir —
+     ağ dairə onun üzərində itirdi, ona görə tünd ton seçilir. */
+  --switch-knob: #0b1220;
+
+  /* Elevation — tünd fonda daha dərin kölgələr */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.6), 0 2px 4px -2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 16px -4px rgba(0, 0, 0, 0.65),
+    0 4px 6px -2px rgba(0, 0, 0, 0.4);
+
+  color-scheme: dark;
+
+  /* Tünd fonda skelet parıltısı işıq tərəfdən gəlir (ağ deyil) */
+  --shimmer-from: rgba(255, 255, 255, 0);
+  --shimmer-via: rgba(148, 163, 184, 0.22);
 }
 
 /* ------------------------------------------------------------------ RESET -- */
@@ -671,7 +757,7 @@ svg {
   color: var(--text-inverse);
 }
 .btn--danger:hover:not(:disabled) {
-  background-color: #912018;
+  background-color: var(--danger-active);
 }
 
 .btn--sm {
@@ -723,7 +809,7 @@ svg {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background-color: #fff;
+  background-color: var(--switch-knob);
   box-shadow: var(--shadow-xs);
   transition: transform 0.18s ease;
 }
@@ -739,6 +825,58 @@ svg {
 .switch input:focus-visible + .switch__track {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
+}
+
+/* ------------------------------------------------------ TEMA TOGGLE (moon/sun) --
+ * js/theme.js `data-theme-toggle` düymələrini idarə edir.
+ * İki ikon yalnız CSS ilə görünürlük dəyişir — heç bir JS mətn dəyişmir,
+ * beləliklə DOM-a istifadəçi məlumatı yazılmır (XSS səthəsi yaranmır).
+ * ------------------------------------------------------------------------- */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex-shrink: 0;
+  background-color: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.theme-toggle:hover {
+  background-color: var(--surface-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.theme-toggle__icon {
+  display: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* Açıq rejimdə "ay" (tündə keçmək üçün), tünd rejimdə "günəş" görünür */
+.theme-toggle__icon--moon {
+  display: block;
+}
+
+[data-theme="dark"] .theme-toggle__icon--moon {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle__icon--sun {
+  display: block;
 }
 
 /* ----------------------------------------------------------------- FORM ---- */
@@ -785,11 +923,11 @@ svg {
 }
 
 .input::placeholder {
-  color: #98a2b3;
+  color: var(--text-tertiary);
 }
 
 .input:hover:not(:disabled):not(:focus) {
-  border-color: #b4bcc8;
+  border-color: var(--border-strong);
 }
 
 .input:focus {
@@ -1073,6 +1211,8 @@ svg {
   border-radius: var(--radius-sm);
 }
 
+/* Shimmer parıltısı tokenlə əlaqələndirilib: tünd rejimdə ağ parıltı
+   `--surface-inset` (#1c2942) üzərində görünməzdi. */
 .skeleton::after {
   content: "";
   position: absolute;
@@ -1080,9 +1220,9 @@ svg {
   transform: translateX(-100%);
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.65) 50%,
-    rgba(255, 255, 255, 0) 100%
+    var(--shimmer-from) 0%,
+    var(--shimmer-via) 50%,
+    var(--shimmer-from) 100%
   );
   animation: skeleton-shimmer 1.4s infinite;
 }
@@ -1221,7 +1361,7 @@ svg {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(16, 24, 40, 0.55);
+  background-color: var(--overlay-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
